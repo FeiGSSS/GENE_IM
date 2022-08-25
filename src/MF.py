@@ -41,8 +41,6 @@ def find_modules(N:BooleanNetwork,
         else:
             raise NotImplementedError
         
-        return modules
-        
     return modules
 
 def average_seed_mf(N:BooleanNetwork,
