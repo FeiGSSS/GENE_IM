@@ -13,6 +13,8 @@ from cana.boolean_network import BooleanNetwork
 
 from typing import Dict
 
+from scipy.stats import entropy
+
 def look_up_table(node:BooleanNode):
     """构建节点的输入和输出的映射 
     输入用一个01序列表示
@@ -50,3 +52,39 @@ def get_sunits(N:BooleanNetwork):
         for state in ['0','1']:
             sunit.append(str(node.name)+'-'+state)
     return sunit
+
+
+def config_entropy(diffusion,
+                   base=2,
+                   normalized=True,
+                   strict=False):
+    """ 
+    determine the entropy of an iterable keyed as 
+    {timestep: {node: activation_probabilities} }
+    to determine information gain from reducing possible network configurations, 
+    normalization based on total possible entropy and total possible network configurations,
+    strict only reduces configurations based on constants rather than probabilities
+    """
+    
+    nodes = list(diffusion[0].keys())
+    
+    config_entropy = {t:0.0 for t in diffusion}
+    configs = {t:1.0 for t in diffusion} #max possible entropy
+    
+    max_entropy = sum([entropy([.5,.5],base=base) for node in nodes])
+    max_configs = 2**len(nodes)
+    
+    for t in diffusion:
+        for node in nodes:
+            p = diffusion[t][node]
+            config_entropy[t] += entropy([p,1-p],base=base)
+            if strict and p < 1 and p > 0: #non-constant so consider both possibilities
+                configs[t] *= 2
+            else:
+                configs[t] *= 1/max([p, 1-p])
+        
+    if normalized:
+        config_entropy = {t : config_entropy[t]/max_entropy for t in config_entropy}
+        configs = {t : configs[t]/max_configs for t in configs}
+    
+    return config_entropy,configs

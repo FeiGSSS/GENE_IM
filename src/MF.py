@@ -16,7 +16,7 @@ from cana.boolean_node import BooleanNode
 def find_modules(N:BooleanNetwork,
                  seed_size:int,
                  seed_unit:List,
-                 seeds:list=None,
+                 _seeds = None,
                  iterations:int=10,
                  pinning:Set=None,
                  reduced:bool=True,
@@ -27,8 +27,14 @@ def find_modules(N:BooleanNetwork,
                  models:int=1):
     
     #define seeds
-    if seeds is None:
-        seeds = list(combinations(seed_unit, seed_size))
+    if _seeds is None:
+        _seeds = list(combinations(seed_unit, seed_size))
+    seeds = []
+    for s in _seeds:
+        if len(s) == len(set([n[:-2] for n in s])):
+            # make sure that one node only assigned with
+            # one inital status
+            seeds.append(s)
 
     # 存储每一个 seed 产生的结果
     modules = {seed:set() for seed in seeds}
